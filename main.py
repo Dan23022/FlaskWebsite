@@ -1,14 +1,21 @@
 import os
 import sqlite3
 import bcrypt
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, session
 from flask.views import MethodView
 
 class ChatApp:
     def __init__(self):
         self.app = Flask(__name__)
         self.app.config['SECRET_KEY'] = 'your-secret-key'
-        self.chat_messages = {}
+        self.setup_database()
+
+    def setup_database(self):
+        conn = sqlite3.connect("misc/chat.db")
+        cursor = conn.cursor()
+        cursor.execute("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, message TEXT)")
+        conn.commit()
+        conn.close()
 
     def setup_routes(self):
         self.app.add_url_rule('/', view_func=LoginPage.as_view('login_page'))
@@ -34,14 +41,12 @@ class LoginPage(MethodView):
         username = request.form['email']
         password = request.form['password'].encode('utf-8')
 
-        connect = sqlite3.connect(f"misc/main_db")
+        connect = sqlite3.connect("misc/main_db")
         cur = connect.cursor()
         cur.execute("CREATE TABLE IF NOT EXISTS logins (username TEXT, password TEXT)")
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
         cur.execute("INSERT INTO logins (username, password) VALUES (?, ?)", (username, hashed_password))
         connect.commit()
-
-        session['username'] = username
 
         return redirect('/chatroom')
 
@@ -64,20 +69,30 @@ class Login(MethodView):
 
 class SendMessage(MethodView):
     def post(self):
-        message = f"{session['username']}: {request.form['message']}"
-        if 'messages' not in session:
-            session['messages'] = []
-        session['messages'].append(message)
-        session.modified = True  # Explicitly mark the session as modified
+        username = session['username']
+        message = request.form['message']
+
+        conn = sqlite3.connect("misc/chat.db")
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO messages (username, message) VALUES (?, ?)", (username, message))
+        conn.commit()
+        conn.close()
+
         return "Message sent"
 
 class GetMessages(MethodView):
     def get(self):
-        if 'messages' in session:
-            messages = "<br>".join(session['messages'])
-        else:
-            messages = ""
-        return messages
+        conn = sqlite3.connect("misc/chat.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM messages")
+        messages = cursor.fetchall()
+        conn.close()
+
+        formatted_messages = ""
+        for msg in messages:
+            formatted_messages += f"{msg[1]}: {msg[2]}<br>"
+
+        return formatted_messages
 
 if __name__ == '__main__':
     app = ChatApp()
