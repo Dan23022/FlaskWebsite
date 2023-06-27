@@ -1,45 +1,83 @@
 import sqlite3
+import bcrypt
+from flask import Flask, render_template, request, redirect, session, jsonify
+from flask.views import MethodView
 
-import bcrypt as bcrypt
-from flask import *
+class ChatApp:
+    def __init__(self):
+        self.app = Flask(__name__)
+        self.app.config['SECRET_KEY'] = 'your-secret-key'
+        self.chat_messages = {}
 
-app = Flask(__name__)
+    def setup_routes(self):
+        self.app.add_url_rule('/', view_func=LoginPage.as_view('login_page'))
+        self.app.add_url_rule('/register', view_func=LoginPage.as_view('register'))
+        self.app.add_url_rule('/login', view_func=Login.as_view('login'))
+        self.app.add_url_rule('/chatroom', view_func=ChatRoom.as_view('chatroom'))
+        self.app.add_url_rule('/send_message', view_func=SendMessage.as_view('send_message'))
+        self.app.add_url_rule('/get_messages', view_func=GetMessages.as_view('get_messages'))
 
-@app.route('/')
-def login_page():
-    return render_template('login_page.html')
+    def run(self):
+        self.setup_routes()
+        self.app.run(debug=True)
 
-@app.route('/register', methods=['POST'])
-def register():
-    username = request.form['email']
-    password = request.form['password'].encode('utf-8')
+class ChatRoom(MethodView):
+    def get(self):
+        return render_template('chatroom.html')
 
-    connect = sqlite3.connect("misc/main_db")
-    cur = connect.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS logins (username TEXT, password TEXT)")
-    hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
-    cur.execute("INSERT INTO logins (username, password) VALUES (?, ?)", (username, hashed_password))
-    connect.commit()
+class LoginPage(MethodView):
+    def get(self):
+        return render_template('login_page.html')
 
-    return "Registration Successful"
+    def post(self):
+        username = request.form['email']
+        password = request.form['password'].encode('utf-8')
 
-@app.route('/login', methods=['POST'])
-def login():
+        connect = sqlite3.connect("misc/main_db")
+        cur = connect.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS logins (username TEXT, password TEXT)")
+        hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
+        cur.execute("INSERT INTO logins (username, password) VALUES (?, ?)", (username, hashed_password))
+        connect.commit()
 
-    username = request.form['email']
-    password = request.form['password'].encode('utf-8')
+        session['username'] = username
 
-    connect = sqlite3.connect("misc/main_db")
-    cur = connect.cursor()
-    cur.execute("SELECT password FROM logins WHERE username = ?", (username,))
-    result = cur.fetchone()
+        return redirect('/chatroom')
 
-    if result and bcrypt.checkpw(password, result[0]):
-        cur.close()
-        return "Login Successful"
-    else:
-        return "Login Failed"
+class Login(MethodView):
+    def post(self):
+        username = request.form['email']
+        password = request.form['password'].encode('utf-8')
 
+        connect = sqlite3.connect("misc/main_db")
+        cur = connect.cursor()
+        cur.execute("SELECT password FROM logins WHERE username = ?", (username,))
+        result = cur.fetchone()
+
+        if result and bcrypt.checkpw(password, result[0]):
+            cur.close()
+            session['username'] = username
+            return redirect('/chatroom')
+        else:
+            return "Login Failed"
+
+class SendMessage(MethodView):
+    def post(self):
+        message = f"{session['username']}: {request.form['message']}"
+        if 'messages' not in session:
+            session['messages'] = []
+        session['messages'].append(message)
+        session.modified = True  # Explicitly mark the session as modified
+        return "Message sent"
+
+class GetMessages(MethodView):
+    def get(self):
+        if 'messages' in session:
+            messages = "<br>".join(session['messages'])
+        else:
+            messages = ""
+        return messages
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app = ChatApp()
+    app.run()

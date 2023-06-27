@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>CSS Template</title>
+<meta charset="utf-8">
+<meta name="chatroom" content="width=device-width, initial-scale=1">
+<style>
+/* Styles for chatroom omitted for brevity */
+
+.chatlog {
+  overflow-y: scroll;
+  height: 400px;
+}
+
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+  $("form").submit(function(event) {
+    event.preventDefault();
+    var username = "USERNAME";  // Replace with the actual username
+    var message = $("#send_message").val();
+    $.post("/send_message", { username: username, message: message }, function() {
+      $("#send_message").val("");  // Clear the input field after sending the message
+      updateChatlog();  // Update the chatlog after sending the message
+    });
+  });
+
+  function updateChatlog() {
+    $.get("/get_messages", function(data) {
+      $(".chatlog").html(data);  // Replace the chatlog content with the received messages
+      // Scroll to the bottom of the chatlog
+      var chatlog = document.querySelector(".chatlog");
+      chatlog.scrollTop = chatlog.scrollHeight;
+    });
+  }
+
+  // Fetch new messages every 2 seconds
+  setInterval(updateChatlog, 2000);
+
+  // Initial chatlog update
+  updateChatlog();
+});
+
+</script>
+</head>
+<body>
+
+<header>
+  <h2>Chatroom!</h2>
+</header>
+
+<div class="chatbox">
+  <div class="chatlog">
+    <!-- Chatlog content will be inserted here dynamically -->
+  </div>
+</div>
+
+<form>
+  <label for="send_message">Send Message:</label>
+  <input type="text" id="send_message" name="send_message" placeholder="">
+  <input type="submit" value="Send">
+</form>
+
+<footer>
+  <p>You're chatting as: EMAIL</p>
+</footer>
+
+</body>
+</html>
