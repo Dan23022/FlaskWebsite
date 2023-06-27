@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import bcrypt
 from flask import Flask, render_template, request, redirect, session, jsonify
@@ -33,7 +34,7 @@ class LoginPage(MethodView):
         username = request.form['email']
         password = request.form['password'].encode('utf-8')
 
-        connect = sqlite3.connect("misc/main_db")
+        connect = sqlite3.connect(f"misc/main_db")
         cur = connect.cursor()
         cur.execute("CREATE TABLE IF NOT EXISTS logins (username TEXT, password TEXT)")
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
@@ -80,4 +81,5 @@ class GetMessages(MethodView):
 
 if __name__ == '__main__':
     app = ChatApp()
+    app.debug = True
     app.run()
