@@ -31,7 +31,8 @@ class ChatApp:
 
 class ChatRoom(MethodView):
     def get(self):
-        return render_template('chatroom.html')
+        username = session.get('username')
+        return render_template('chatroom.html', username=username)
 
 class LoginPage(MethodView):
     def get(self):
@@ -69,7 +70,7 @@ class Login(MethodView):
 
 class SendMessage(MethodView):
     def post(self):
-        username = session['username']
+        username = session.get('username')
         message = request.form['message']
 
         conn = sqlite3.connect("misc/chat.db")

@@ -18,9 +18,8 @@
 $(document).ready(function() {
   $("form").submit(function(event) {
     event.preventDefault();
-    var username = "USERNAME";  // Replace with the actual username
     var message = $("#send_message").val();
-    $.post("/send_message", { username: username, message: message }, function() {
+    $.post("/send_message", { message: message }, function() {
       $("#send_message").val("");  // Clear the input field after sending the message
       updateChatlog();  // Update the chatlog after sending the message
     });
@@ -56,14 +55,14 @@ $(document).ready(function() {
   </div>
 </div>
 
-<form>
+<form id="message-form">
   <label for="send_message">Send Message:</label>
   <input type="text" id="send_message" name="send_message" placeholder="">
   <input type="submit" value="Send">
 </form>
 
 <footer>
-  <p>You're chatting as: EMAIL</p>
+  <p>You're chatting as: {{ username }}</p>
 </footer>
 
 </body>
