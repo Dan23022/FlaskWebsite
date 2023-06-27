@@ -1,8 +1,14 @@
 import os
 import sqlite3
 import bcrypt
-from flask import Flask, render_template, request, redirect, jsonify, session
+from flask import Flask, render_template, request, redirect, jsonify, session, flash
 from flask.views import MethodView
+
+
+class Logout(MethodView):
+    def post(self):
+        session.pop('username', None)  # Remove the username from the session
+        return render_template("login_page.html")
 
 class ChatApp:
     def __init__(self):
@@ -24,6 +30,7 @@ class ChatApp:
         self.app.add_url_rule('/chatroom', view_func=ChatRoom.as_view('chatroom'))
         self.app.add_url_rule('/send_message', view_func=SendMessage.as_view('send_message'))
         self.app.add_url_rule('/get_messages', view_func=GetMessages.as_view('get_messages'))
+        self.app.add_url_rule('/logout', view_func=Logout.as_view('logout'))  # Added the logout route
 
     def run(self, host='localhost', port=5000):
         self.setup_routes()
@@ -36,7 +43,7 @@ class ChatRoom(MethodView):
 
 class LoginPage(MethodView):
     def get(self):
-        return render_template('login_page.html')
+        return render_template('login_page.html', message=session.pop('message', None))
 
     def post(self):
         username = request.form['email']
@@ -49,8 +56,10 @@ class LoginPage(MethodView):
         cur.execute("INSERT INTO logins (username, password) VALUES (?, ?)", (username, hashed_password))
         connect.commit()
 
-        return redirect('/chatroom')
+        return redirect('/')
 
+
+        return
 class Login(MethodView):
     def post(self):
         username = request.form['email']

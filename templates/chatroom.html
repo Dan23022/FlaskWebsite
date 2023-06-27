@@ -12,6 +12,10 @@
   height: 400px;
 }
 
+.logout-btn {
+  float: right;
+}
+
 </style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -39,7 +43,14 @@ $(document).ready(function() {
 
   // Initial chatlog update
   updateChatlog();
+
+    $("#logout-btn").click(function() {
+    $.post("/logout", function() {
+      window.location.replace("/");  // Redirect to the login page after logout
+    });
+  });
 });
+
 
 </script>
 </head>
@@ -47,6 +58,7 @@ $(document).ready(function() {
 
 <header>
   <h2>Chatroom!</h2>
+  <button id="logout-btn" class="logout-btn">Logout</button>
 </header>
 
 <div class="chatbox">

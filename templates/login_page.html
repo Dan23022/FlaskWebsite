@@ -57,6 +57,9 @@
 <body>
     <div class="container">
         <h2>Login</h2>
+        {% if message %}
+            <div class="flash-message">{{ message }}</div>
+        {% endif %}
         <form method="POST">
             <label for="email">Email:</label>
             <input type="text" id="email" name="email" placeholder="Enter your email">
@@ -64,8 +67,8 @@
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" placeholder="Enter your password">
 
-            <button class="login", type="submit" name="action", formaction="/login">Login</button>
-            <button class="register", type="submit" name="action", formaction="/register">Register</button>
+            <button class="login" type="submit" name="action" formaction="/login">Login</button>
+            <button class="register" type="submit" name="action" formaction="/register">Register</button>
         </form>
     </div>
 </body>
