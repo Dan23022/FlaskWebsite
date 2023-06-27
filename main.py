@@ -18,9 +18,9 @@ class ChatApp:
         self.app.add_url_rule('/send_message', view_func=SendMessage.as_view('send_message'))
         self.app.add_url_rule('/get_messages', view_func=GetMessages.as_view('get_messages'))
 
-    def run(self):
+    def run(self, host='localhost', port=5000):
         self.setup_routes()
-        self.app.run(debug=True)
+        self.app.run(host=host, port=port, debug=True)
 
 class ChatRoom(MethodView):
     def get(self):
@@ -81,5 +81,4 @@ class GetMessages(MethodView):
 
 if __name__ == '__main__':
     app = ChatApp()
-    app.debug = True
-    app.run()
+    app.run(host='0.0.0.0')
