@@ -32,7 +32,7 @@ class ChatApp:
         self.app.add_url_rule('/get_messages', view_func=GetMessages.as_view('get_messages'))
         self.app.add_url_rule('/logout', view_func=Logout.as_view('logout'))  # Added the logout route
 
-    def run(self, host='localhost', port=5000):
+    def run(self, host='localhost', port=24886):
         self.setup_routes()
         self.app.run(host=host, port=port, debug=True)
 
@@ -46,10 +46,10 @@ class LoginPage(MethodView):
         return render_template('login_page.html', message=session.pop('message', None))
 
     def post(self):
-        username = request.form['email']
+        username = request.form['username']
         password = request.form['password'].encode('utf-8')
 
-        connect = sqlite3.connect("misc/main_db")
+        connect = sqlite3.connect("misc/main.db")
         cur = connect.cursor()
         cur.execute("CREATE TABLE IF NOT EXISTS logins (username TEXT, password TEXT)")
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
@@ -58,14 +58,12 @@ class LoginPage(MethodView):
 
         return redirect('/')
 
-
-        return
 class Login(MethodView):
     def post(self):
-        username = request.form['email']
+        username = request.form['username']
         password = request.form['password'].encode('utf-8')
 
-        connect = sqlite3.connect("misc/main_db")
+        connect = sqlite3.connect("misc/main.db")
         cur = connect.cursor()
         cur.execute("SELECT password FROM logins WHERE username = ?", (username,))
         result = cur.fetchone()
